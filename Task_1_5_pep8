@@ -1,0 +1,57 @@
+import email
+import smtplib
+import imaplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from pprint import pprint
+
+# options and configurations
+YANDEX_SMTP = 'smtp.yandex.ru'
+YANDEX_IMAP = 'imap.yandex.ru'
+
+login = 'login@yandex.ru'
+password = 'qwerty'
+subject = 'Test_subject'
+recipients = ['vasya@email.com', 'petya@email.com']
+message = 'test message'
+header = None
+
+
+class WorkWithMail:
+    def __init__(self, login_mail, password_mail):
+        self.login = login_mail
+        self.password = password_mail
+
+    def send_message(self, recipient_mail, text_message, subject_mail):
+        msg = MIMEMultipart()
+        msg['From'] = self.login
+        msg['To'] = ', '.join(recipient_mail)
+        msg['Subject'] = subject_mail
+        msg.attach(MIMEText(text_message))
+
+        mail_object = smtplib.SMTP_SSL(YANDEX_SMTP)
+        mail_object.ehlo(self.login)
+        mail_object.login(self.login, self.password)
+        mail_object.sendmail(self.login, recipient_mail, msg.as_string())  # send message
+        mail_object.quit()
+
+    def receive_message(self):
+        mail = imaplib.IMAP4_SSL(YANDEX_IMAP, 993)
+        mail.login(self.login, self.password)
+        mail.list()
+        mail.select("inbox")
+        criterion = '(HEADER Subject "%s")' % header if header else 'ALL'
+        result, data = mail.uid('search', None, criterion)
+        assert data[0], 'There are no letters with current header'
+        latest_email_uid = data[0].split()[-1]
+        result, data = mail.uid('fetch', latest_email_uid, '(RFC822)')
+        raw_email = data[0][1]
+        email_message = email.message_from_bytes(raw_email)  
+        # pprint(email_message.items())
+        mail.logout()
+
+
+if __name__ == '__main__':
+    mail_unit_1 = WorkWithMail(login, password)
+    # mail_unit_1.send_message(recipients, message, subject)
+    # mail_unit_1.receive_message()
