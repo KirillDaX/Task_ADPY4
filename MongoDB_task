@@ -1,0 +1,65 @@
+import csv
+import re
+from datetime import datetime
+from pymongo import MongoClient
+
+client = MongoClient()
+
+my_mongo_db = client['mongotest']
+artists_collection = my_mongo_db['artists']
+
+
+def add_artist(collection, dict_data):
+    artist = dict_data
+    return collection.insert_one(artist).inserted_id
+
+
+def read_data(csv_file, db):
+    """
+    Загрузить данные в бд из CSV-файла
+    """
+    with open(csv_file, encoding='utf8') as csvfile:
+        # прочитать файл с данными и записать в коллекцию
+        reader = csv.DictReader(csvfile)
+        for show in reader:
+            show['Цена'] = int(show['Цена'])
+            show['Дата'] = show['Дата'] + '.19'
+            show['Дата'] = datetime.strptime(show['Дата'], '%d.%m.%y')
+            add_artist(artists_collection, show)
+
+
+def find_cheapest():
+    """
+    Отсортировать билеты из базы по возрастания цены
+    Документация: https://docs.mongodb.com/manual/reference/method/cursor.sort/
+    """
+    #
+    result = artists_collection.find().sort('Цена', 1)
+    for item in result:
+        print(item)
+    return result
+
+
+def find_by_name(name):
+    """
+    Найти билеты по имени исполнителя (в том числе – по подстроке),
+    и вернуть их по возрастанию цены
+    """
+    result = artists_collection.find({'Исполнитель': name}).sort('Цена', 1)
+    for item in result:
+        print(item)
+    return result
+
+
+def sort_date():
+    result = artists_collection.find().sort('Дата', 1)
+    for item in result:
+        print(item)
+
+
+if __name__ == '__main__':
+    # find_cheapest()
+    sort_date()
+    # find_by_name('T-Fest')
+    # read_data('artists.csv', my_mongo_db)
+
