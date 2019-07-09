@@ -6,6 +6,8 @@ student_1 = {'id': 1, 'name': 'John', 'gpa': 4, 'birth': '20/08/1985'}
 new_student = {}
 students_list = [{'id': 3, 'name': 'Ron', 'gpa': 5, 'birth': '01/02/1981'},
                  {'id': 4, 'name': 'Fred', 'gpa': 4.4, 'birth': '03/012/2001'}]
+students_list2 = [{'id': 5, 'name': 'Gerda', 'gpa': 2.2, 'birth': '16/05/1988'},
+                  {'id': 6, 'name': 'Marta', 'gpa': 4.2, 'birth': '25/012/2000'}]
 result_list = []
 
 
@@ -29,6 +31,7 @@ def create_db():  # создает таблицы
         cur.execute(
             "CREATE TABLE student (id integer PRIMARY KEY, name varchar(100), gpa numeric(10,2), birth timestamp with "
             "time zone);")
+        conn.commit()
     except psycopg2.errors.DuplicateTable:
         print('table student already created')
     finally:
@@ -37,18 +40,20 @@ def create_db():  # создает таблицы
         conn = psycopg2.connect("dbname=test_db user=test_user password=1234")
         cur = conn.cursor()
         cur.execute("CREATE TABLE course (id integer PRIMARY KEY, name varchar(100));")
+        conn.commit()
     except psycopg2.errors.DuplicateTable:
         print('table course already created')
     finally:
         conn.close()
     try:
-        print('block try create Course_students')
+        # print('block try create Course_students')
         conn = psycopg2.connect("dbname=test_db user=test_user password=1234")
-        print(conn)
+        # print(conn)
         cur = conn.cursor()
-        print(cur)
-        cur.execute("CREATE TABLE Course_students (id serial PRIMARY KEY, id_students integer references student(id), "
-                    "id_course integer references course(id));")
+        # print(cur)
+        cur.execute("CREATE TABLE Course_students (id serial PRIMARY KEY, id_students integer , "
+                    "id_course integer);")
+        conn.commit()
     except psycopg2.errors.DuplicateTable:
         print('table Course_students already created')
     finally:
@@ -67,6 +72,10 @@ def get_students(course_id):
 
 def add_students(course_id, students):
     """создает студентов из списка словарей и записывает каждого на курс"""
+    cur.execute("select * from course")
+    test_in = cur.fetchone()
+    if course_id not in test_in:
+        create_new_course(course_id, input('Введите имя нового курса: '))
     for student_item in students:
         add_student(student_item)
         cur.execute("""INSERT INTO Course_students (id_students, id_course) values(%s , %s)""", (student_item['id'],
@@ -91,6 +100,10 @@ def create_new_course(id_course, name_new_course):
     """создает новый курс. аргументы: (id курса, имя курса)"""
     cur.execute("INSERT INTO Course (id ,name) VALUES (%s, %s)", (id_course, name_new_course))
 
+
+# create_db()
+# create_new_course(1, 'one')
+# add_students(2, students_list2)
 
 conn.commit()
 cur.close()
