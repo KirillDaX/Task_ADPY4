@@ -46,11 +46,8 @@ def create_db():  # создает таблицы
     finally:
         conn.close()
     try:
-        # print('block try create Course_students')
         conn = psycopg2.connect("dbname=test_db user=test_user password=1234")
-        # print(conn)
         cur = conn.cursor()
-        # print(cur)
         cur.execute("CREATE TABLE Course_students (id serial PRIMARY KEY, id_students integer , "
                     "id_course integer);")
         conn.commit()
