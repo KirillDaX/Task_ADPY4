@@ -45,10 +45,14 @@ def find_by_name(name):
     Найти билеты по имени исполнителя (в том числе – по подстроке),
     и вернуть их по возрастанию цены
     """
-    result = artists_collection.find({'Исполнитель': name}).sort('Цена', 1)
-    for item in result:
-        print(item)
-    return result
+    pattern = re.compile(r'.*{}.*'.format(name), flags=re.IGNORECASE)
+    for ggg in artists_collection.find():
+        find_parts = pattern.findall(ggg['Исполнитель'])
+        for items_from_parts in find_parts:
+            result = artists_collection.find({'Исполнитель': items_from_parts}).sort('Цена', 1)
+            for item in result:
+                print(item)
+            return result
 
 
 def sort_date():
@@ -59,7 +63,9 @@ def sort_date():
 
 if __name__ == '__main__':
     # find_cheapest()
-    sort_date()
-    # find_by_name('T-Fest')
+    # sort_date()
+    find_by_name('197')
+    find_by_name('t-')
+    find_by_name('mal Джа')
     # read_data('artists.csv', my_mongo_db)
 
